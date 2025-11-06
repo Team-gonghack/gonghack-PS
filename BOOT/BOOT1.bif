@@ -1,0 +1,7 @@
+//arch = zynq; split = false; format = BIN
+the_ROM_image:
+{
+	C:\work\github\gonghack-PS\gonghack_PS\build\gonghack_PS.elf
+	[bootloader]C:\work\github\gonghack-PS\gonghack_pl\zynq_fsbl\build\fsbl.elf
+	C:\work\github\Care-Spine_HDL\Care-Spine\Care-Spine.runs\impl_1\design_1_wrapper.bit
+}
