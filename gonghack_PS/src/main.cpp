@@ -14,12 +14,17 @@
 #define I2C_READER_4_BASEADDR  0x43CA0000 
 
 #define DMA_CTRL_BASEADDR      XPAR_AXI_DMA_0_BASEADDR
+#define UARTLITE_BASEADDR      XPAR_AXI_UARTLITE_0_BASEADDR
 
 #define REG_START_TRIGGER 0x00
 #define NUM_READERS       5    
 #define DATA_WIDTH_BYTES  8    
 #define DATA_SIZE_BYTES   (NUM_READERS * DATA_WIDTH_BYTES)
 #define RX_ALIGNMENT      64   
+
+#define UARTLITE_TX_FIFO_OFFSET  0x4
+#define UARTLITE_STAT_REG_OFFSET 0x8
+#define UARTLITE_STAT_TX_FULL    0x08 
 
 uint64_t RxBuffer[NUM_READERS] __attribute__ ((aligned(RX_ALIGNMENT)));
 
@@ -59,7 +64,6 @@ int main() {
     }
     xil_printf("DMA S2MM Channel is ready. Entering main loop...\r\n");
 
-    // --- Main Loop ---
     while(1) {
         
         Xil_DCacheFlushRange((UINTPTR)RxBufferPtr, DATA_SIZE_BYTES);
@@ -100,9 +104,19 @@ int main() {
             xil_printf("MPU Data #%d: X=%d, Y=%d, Z=%d (RAW 0x%llx)\r\n", Index, accel_x, accel_y, accel_z, data64);
         }
 
+        uint8_t *BytePtr = (uint8_t *)RxBufferPtr;
+        
+        for (Index = 0; Index < DATA_SIZE_BYTES; Index++) {
+            while (Xil_In32(UARTLITE_BASEADDR + UARTLITE_STAT_REG_OFFSET) & UARTLITE_STAT_TX_FULL) {
+                
+            }
+            Xil_Out32(UARTLITE_BASEADDR + UARTLITE_TX_FIFO_OFFSET, BytePtr[Index]);
+        }
+        xil_printf("PL UART (axi_uartlite_0) Send Complete.\r\n");
+
         xil_printf("---- Cycle Complete ----\r\n");
-        usleep(100000); // Wait 100ms before next cycle
+        usleep(100000); 
     }
 
-    return 0; // Unreachable
+    return 0; 
 }
